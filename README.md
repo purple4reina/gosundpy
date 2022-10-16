@@ -1,5 +1,7 @@
 # gosundpy
 
+[![PyPI version](https://badge.fury.io/py/gosundpy.svg)](https://badge.fury.io/py/gosundpy)
+
 Control your Gosund smart devices via python code.
 
 ## Install
@@ -11,7 +13,7 @@ pip install gosundpy
 ## Prerequisites
 
 In order to control your devices, you must register your devices using the Tuya
-Smart app ([ios][1] [android][2]) and create a new Cloud Project in the Tuya
+Smart app ([ios][1]/[android][2]) and create a new Cloud Project in the Tuya
 IoT Platform.
 
 ## Usage
@@ -21,7 +23,7 @@ import time
 
 from gosundpy import Gosund
 
-gosund = gosund('username', 'password', 'access_id', 'access_key')
+gosund = Gosund('username', 'password', 'access_id', 'access_key')
 
 commands = ['turn_off', 'turn_on', 'turn_off', 'switch', 'switch', 'turn_off']
 
