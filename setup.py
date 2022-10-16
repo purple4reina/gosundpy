@@ -24,6 +24,8 @@ setup(
     author_email="purple4reina@gmail.com",
     keywords="gosund,smartlife,tuya,iot,api,sdk,python",
     description="Python API for controling Gosund smart devices",
+    long_description=read("README.md"),
+    long_description_content_type="text/markdown",
     license="MIT",
     project_urls={
         "Source": "https://github.com/purple4reina/gosundpy",
