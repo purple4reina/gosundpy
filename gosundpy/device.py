@@ -7,6 +7,8 @@ class GosundDevice(object):
         category = resp['result']['category']
         if category == 'cz':
             cls = GosundSwitchDevice
+        elif category == 'dj':
+            cls = GosundLightbulbDevice
         else:
             cls = GosundDevice
         return cls(device_id, manager)
@@ -30,23 +32,31 @@ class GosundDevice(object):
         return f'<{self.__class__.__name__} device_id={self.device_id}>'
     __repr__ = __str__
 
-class GosundSwitchDevice(GosundDevice):
+class DeviceOnOffMixin(object):
 
     def turn_on(self):
-        commands = [{'code': 'switch_1', 'value': True}]
+        commands = [{'code': self.on_off_code, 'value': True}]
         return self.send_commands(commands)
 
     def turn_off(self):
-        commands = [{'code': 'switch_1', 'value': False}]
+        commands = [{'code': self.on_off_code, 'value': False}]
         return self.send_commands(commands)
 
     def is_on(self):
         for status in self.get_status():
-            if status.get('code') == 'switch_1':
+            if status.get('code') == self.on_off_code:
                 return status.get('value', False)
         return False
 
     def switch(self):
         value = not self.is_on()
-        commands = [{'code': 'switch_1', 'value': value}]
+        commands = [{'code': self.on_off_code, 'value': value}]
         return self.send_commands(commands)
+
+class GosundSwitchDevice(GosundDevice, DeviceOnOffMixin):
+
+    on_off_code = 'switch_1'
+
+class GosundLightbulbDevice(GosundDevice, DeviceOnOffMixin):
+
+    on_off_code = 'switch_led'
