@@ -8,7 +8,7 @@ class GosundDevice(object):
         if category == 'cz':
             cls = GosundSwitchDevice
         elif category == 'dj':
-            cls = GosundLightbulbDevice
+            cls = GosundLightBulbDevice
         else:
             cls = GosundDevice
         return cls(device_id, manager)
@@ -57,6 +57,6 @@ class GosundSwitchDevice(GosundDevice, DeviceOnOffMixin):
 
     on_off_code = 'switch_1'
 
-class GosundLightbulbDevice(GosundDevice, DeviceOnOffMixin):
+class GosundLightBulbDevice(GosundDevice, DeviceOnOffMixin):
 
     on_off_code = 'switch_led'

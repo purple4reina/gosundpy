@@ -2,14 +2,14 @@ import pytest
 import responses
 
 from gosundpy.device import (GosundDevice, GosundSwitchDevice,
-        GosundLightbulbDevice)
+        GosundLightBulbDevice)
 from gosundpy.exceptions import GosundException
 
 BASEURL = 'https://openapi.tuyaus.com/v1.0/iot-03'
 
 _test_gosund_device_from_response = (
         ('cz', 'GosundSwitchDevice'),
-        ('dj', 'GosundLightbulbDevice'),
+        ('dj', 'GosundLightBulbDevice'),
         ('ab', 'GosundDevice'),
 )
 
