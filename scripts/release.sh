@@ -11,6 +11,13 @@ fi
 echo "updating version to \"${VERSION}\""
 echo "version = \"${VERSION}\"" > gosundpy/version.py
 
+echo "adding version to changelog"
+chng="CHANGELOG.md"
+echo "# CHANGELOG
+
+## ${VERSION}
+$(tail -n +4 $chng)" > $chng
+
 echo "committing changes"
 git add gosundpy/version.py
 git cm -m "Updating version to ${VERSION}"
