@@ -20,6 +20,7 @@ $(tail -n +4 $chng)" > $chng
 
 echo "committing changes"
 git add gosundpy/version.py
+git add CHANGELOG.md
 git cm -m "Updating version to ${VERSION}"
 git push
 git tag "v${VERSION}"
