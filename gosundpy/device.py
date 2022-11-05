@@ -1,4 +1,8 @@
+import logging
+
 from .exceptions import assert_response_success
+
+logger = logging.getLogger('gosundpy')
 
 class GosundDevice(object):
 
@@ -35,10 +39,12 @@ class GosundDevice(object):
 class DeviceOnOffMixin(object):
 
     def turn_on(self):
+        logger.debug('turning on device %s', self.device_id)
         commands = [{'code': self.on_off_code, 'value': True}]
         return self.send_commands(commands)
 
     def turn_off(self):
+        logger.debug('turning off device %s', self.device_id)
         commands = [{'code': self.on_off_code, 'value': False}]
         return self.send_commands(commands)
 
@@ -49,6 +55,7 @@ class DeviceOnOffMixin(object):
         return False
 
     def switch(self):
+        logger.debug('switching device %s', self.device_id)
         value = not self.is_on()
         commands = [{'code': self.on_off_code, 'value': value}]
         return self.send_commands(commands)
