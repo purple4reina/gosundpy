@@ -1,11 +1,14 @@
 #!/bin/bash -e
 
+CURRENT_VERSION=$(cat gosundpy/version.py | awk '{print $3}')
+echo "current version is ${CURRENT_VERSION}"
+
 if [[ -z $VERSION ]]; then
-    echo "VERSION must be set, ex: VERSION=0.2.0"
+    echo "VERSION must be set, ex: VERSION=\"0.2.0\" ./scripts/release.sh"
     exit 1
 fi
 
-echo "updating version to ${VERSION}"
+echo "updating version to \"${VERSION}\""
 echo "version = \"${VERSION}\"" > gosundpy/version.py
 
 echo "committing changes"
