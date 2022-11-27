@@ -1,6 +1,7 @@
 # gosundpy
 
 [![PyPI version](https://badge.fury.io/py/gosundpy.svg)](https://badge.fury.io/py/gosundpy)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/gosundpy)
 
 Control your Gosund smart devices via python code.
 
