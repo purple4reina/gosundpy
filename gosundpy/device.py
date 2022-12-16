@@ -13,6 +13,8 @@ class GosundDevice(object):
             cls = GosundSwitchDevice
         elif category == 'dj':
             cls = GosundLightBulbDevice
+        elif category == 'wsdcg':
+            cls = GosundTempuratureHumiditySensorDevice
         else:
             cls = GosundDevice
         return cls(device_id, manager)
@@ -67,3 +69,23 @@ class GosundSwitchDevice(GosundDevice, DeviceOnOffMixin):
 class GosundLightBulbDevice(GosundDevice, DeviceOnOffMixin):
 
     on_off_code = 'switch_led'
+
+class GosundTempuratureHumiditySensorDevice(GosundDevice):
+
+    temperature_code = 'va_temperature'
+    humidity_code = 'va_humidity'
+
+    def get_temperature(self, unit='F'):
+        res = self.get_status()
+        for sensor in res:
+            if sensor['code'] == self.temperature_code:
+                temp = sensor['value'] / 10
+                if unit.upper() == 'F':
+                    temp = temp * 9/5 + 32
+                return temp
+
+    def get_humidity(self):
+        res = self.get_status()
+        for sensor in res:
+            if sensor['code'] == self.humidity_code:
+                return sensor['value']

@@ -33,3 +33,7 @@ def get_device(gosund, category):
 @pytest.fixture
 def gosund_device(gosund):
     return get_device(gosund, 'ab')
+
+@pytest.fixture
+def gosund_temp_sensor(gosund):
+    return get_device(gosund, 'wsdcg')

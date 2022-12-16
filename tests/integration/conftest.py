@@ -1,7 +1,7 @@
 import pytest
 
 from integration_env import (USERNAME, PASSWORD, ACCESS_ID, ACCESS_KEY,
-        SWITCH_ID, LIGHT_BULB_ID)
+        SWITCH_ID, LIGHT_BULB_ID, TEMP_HUMIDITY_ID)
 from gosundpy import Gosund
 
 @pytest.fixture
@@ -15,3 +15,7 @@ def switch_id():
 @pytest.fixture
 def light_bulb_id():
     return LIGHT_BULB_ID
+
+@pytest.fixture
+def temp_humidity_id():
+    return TEMP_HUMIDITY_ID
