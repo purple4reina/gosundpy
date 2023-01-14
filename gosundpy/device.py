@@ -1,6 +1,6 @@
 import logging
 
-from .exceptions import assert_response_success
+from .exceptions import assert_response_success, GosundException
 
 logger = logging.getLogger('gosundpy')
 
@@ -15,6 +15,12 @@ class GosundDevice(object):
             cls = GosundLightBulbDevice
         elif category == 'wsdcg':
             cls = GosundTempuratureHumiditySensorDevice
+        elif category == 'ldcg':
+            cls = GosundLightSensorDevice
+        elif category == 'pir':
+            cls = GosundMotionSensorDevice
+        elif category == 'mcs':
+            cls = GosundContactSensorDevice
         else:
             cls = GosundDevice
         return cls(device_id, manager)
@@ -27,6 +33,13 @@ class GosundDevice(object):
         resp = self.manager.get_device_status(self.device_id)
         assert_response_success('get device status', resp)
         return resp.get('result', [])
+
+    def get_status_value(self, code):
+        for status in self.get_status():
+            if status.get('code') == code:
+                return status.get('value')
+        raise GosundException(
+                f'code "{code}" not found for device id "{self.device_id}"')
 
     def send_commands(self, commands):
         resp = self.manager.send_commands(self.device_id, commands)
@@ -51,10 +64,7 @@ class DeviceOnOffMixin(object):
         return self.send_commands(commands)
 
     def is_on(self):
-        for status in self.get_status():
-            if status.get('code') == self.on_off_code:
-                return status.get('value', False)
-        return False
+        return self.get_status_value(self.on_off_code)
 
     def switch(self):
         logger.debug('switching device %s', self.device_id)
@@ -76,16 +86,35 @@ class GosundTempuratureHumiditySensorDevice(GosundDevice):
     humidity_code = 'va_humidity'
 
     def get_temperature(self, unit='F'):
-        res = self.get_status()
-        for sensor in res:
-            if sensor['code'] == self.temperature_code:
-                temp = sensor['value'] / 10
-                if unit.upper() == 'F':
-                    temp = temp * 9/5 + 32
-                return temp
+        val = self.get_status_value(self.temperature_code)
+        temp = val / 10
+        if unit.upper() == 'F':
+            temp = temp * 9/5 + 32
+        return temp
 
     def get_humidity(self):
-        res = self.get_status()
-        for sensor in res:
-            if sensor['code'] == self.humidity_code:
-                return sensor['value']
+        return self.get_status_value(self.humidity_code)
+
+class GosundLightSensorDevice(GosundDevice):
+
+    lux_code = 'bright_value'
+
+    def get_lux(self):
+        return self.get_status_value(self.lux_code)
+
+class GosundMotionSensorDevice(GosundDevice):
+
+    motion_code = 'pir'
+
+    NO_ONE_STATE = 'none'
+    HUMAN_STATE = 'pir'
+
+    def motion_sensed(self):
+        return self.get_status_value(self.motion_code) == self.HUMAN_STATE
+
+class GosundContactSensorDevice(GosundDevice):
+
+    contact_code = 'doorcontact_state'
+
+    def is_open(self):
+        return self.get_status_value(self.contact_code)

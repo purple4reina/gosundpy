@@ -2,7 +2,8 @@ import pytest
 import responses
 
 from gosundpy.device import (GosundDevice, GosundSwitchDevice,
-        GosundLightBulbDevice, GosundTempuratureHumiditySensorDevice)
+        GosundLightBulbDevice, GosundTempuratureHumiditySensorDevice,
+        GosundMotionSensorDevice)
 from gosundpy.exceptions import GosundException
 
 BASEURL = 'https://openapi.tuyaus.com/v1.0/iot-03'
@@ -153,6 +154,77 @@ def test_gosund_tempurature_humidity_sensor_device_get_humidity(
     )
     try:
         value = gosund_temp_sensor.get_humidity()
+    except GosundException:
+        assert not success, 'an exception should not have been raised'
+    else:
+        assert value == expect
+
+_test_gosund_light_sensor_device_get_lux = (
+        (43, True),
+        (None, False),
+)
+
+@responses.activate
+@pytest.mark.parametrize('expect,success',
+        _test_gosund_light_sensor_device_get_lux)
+def test_gosund_light_sensor_device_get_lux(expect, success,
+        gosund_light_sensor_device):
+    responses.add(
+            responses.GET,
+            f'{BASEURL}/devices/{gosund_light_sensor_device.device_id}/status',
+            json=_test_sensor_response('bright_value', 43, success),
+            status=200,
+    )
+    try:
+        value = gosund_light_sensor_device.get_lux()
+    except GosundException:
+        assert not success, 'an exception should not have been raised'
+    else:
+        assert value == expect
+
+_test_gosund_motion_sensor_device_motion_sensed = (
+        (GosundMotionSensorDevice.HUMAN_STATE, True, True),
+        (GosundMotionSensorDevice.NO_ONE_STATE, False, True),
+        (GosundMotionSensorDevice.HUMAN_STATE, None, False),
+)
+
+@responses.activate
+@pytest.mark.parametrize('value,expect,success',
+        _test_gosund_motion_sensor_device_motion_sensed)
+def test_gosund_motion_sensor_device_motion_sensed(value, expect, success,
+        gosund_motion_sensor_device):
+    responses.add(
+            responses.GET,
+            f'{BASEURL}/devices/{gosund_motion_sensor_device.device_id}/status',
+            json=_test_sensor_response('pir', value, success),
+            status=200,
+    )
+    try:
+        value = gosund_motion_sensor_device.motion_sensed()
+    except GosundException:
+        assert not success, 'an exception should not have been raised'
+    else:
+        assert value == expect
+
+_test_gosund_contact_sensor_is_open = (
+        (True, True, True),
+        (False, False, True),
+        (True, None, False),
+)
+
+@responses.activate
+@pytest.mark.parametrize('value,expect,success',
+        _test_gosund_contact_sensor_is_open)
+def test_gosund_contact_sensor_is_open(value, expect, success,
+        gosund_contact_sensor_device):
+    responses.add(
+            responses.GET,
+            f'{BASEURL}/devices/{gosund_contact_sensor_device.device_id}/status',
+            json=_test_sensor_response('doorcontact_state', value, success),
+            status=200,
+    )
+    try:
+        value = gosund_contact_sensor_device.is_open()
     except GosundException:
         assert not success, 'an exception should not have been raised'
     else:

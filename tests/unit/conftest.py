@@ -37,3 +37,15 @@ def gosund_device(gosund):
 @pytest.fixture
 def gosund_temp_sensor(gosund):
     return get_device(gosund, 'wsdcg')
+
+@pytest.fixture
+def gosund_light_sensor_device(gosund):
+    return get_device(gosund, 'ldcg')
+
+@pytest.fixture
+def gosund_motion_sensor_device(gosund):
+    return get_device(gosund, 'pir')
+
+@pytest.fixture
+def gosund_contact_sensor_device(gosund):
+    return get_device(gosund, 'mcs')
