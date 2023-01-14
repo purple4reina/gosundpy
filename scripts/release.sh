@@ -42,9 +42,10 @@ echo "# CHANGELOG
 
 ## Unreleased
 
-$(tail -n +4 $chng)" > $chng
+$(tail -n +3 $chng)" > $chng
 git add CHANGELOG.md
 git cm -m "Updating CHANGELOG.md for Unreleased"
+git push
 
 echo "creating new release in github"
 open https://github.com/purple4reina/gosundpy/releases/new

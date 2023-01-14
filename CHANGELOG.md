@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+## 0.5.1
 ### Bug Fixes
 + Improve release script for updating this CHANGELOG
 
