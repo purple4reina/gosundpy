@@ -47,5 +47,7 @@ git add CHANGELOG.md
 git cm -m "Updating CHANGELOG.md for Unreleased"
 git push
 
-echo "creating new release in github"
+echo "Creating new release in github"
+echo "Release title: v${VERSION}"
+echo "Content: copy CHANGELOG entry for this version, use two hashes (##) for headers"
 open https://github.com/purple4reina/gosundpy/releases/new
