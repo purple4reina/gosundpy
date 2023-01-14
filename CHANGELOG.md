@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## 0.5.1
+## Unreleased
+
 ### Bug Fixes
 + Improve release script for updating this CHANGELOG
 
