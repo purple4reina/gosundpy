@@ -11,8 +11,10 @@ fi
 echo "updating version to \"${VERSION}\""
 echo "version = \"${VERSION}\"" > gosundpy/version.py
 
-echo "adding version to changelog"
+rm -rf dist
+
 chng="CHANGELOG.md"
+echo "adding version to changelog"
 echo "# CHANGELOG
 
 ## ${VERSION}
@@ -34,6 +36,15 @@ pip3 install twine
 
 echo "uploading to PyPI"
 twine upload dist/*
+
+echo "adding unreleased version to changelog"
+echo "# CHANGELOG
+
+## Unreleased
+
+$(tail -n +4 $chng)" > $chng
+git add CHANGELOG.md
+git cm -m "Updating CHANGELOG.md for Unreleased"
 
 echo "creating new release in github"
 open https://github.com/purple4reina/gosundpy/releases/new
