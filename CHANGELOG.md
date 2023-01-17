@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## 0.6.0
 ### Features
 + Reduce the number of Tuya API calls by getting status of all devices at once.
