@@ -3,6 +3,8 @@
 ## Unreleased
 
 ## 0.6.1
+### Bug Fixes
++ Re-add `GosundDevice.get_status` method
 
 ## 0.6.0
 ### Features
