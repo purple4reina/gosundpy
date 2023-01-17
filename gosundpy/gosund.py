@@ -1,7 +1,7 @@
 from tuya_iot import TuyaOpenAPI, AuthType, TuyaDeviceManager, TuyaOpenMQ
 
 from .device import GosundDevice
-from .exceptions import assert_response_success
+from .exceptions import assert_response_success, GosundException
 from .utils import cache_response
 
 class Gosund(object):
@@ -15,6 +15,9 @@ class Gosund(object):
         self.manager = TuyaDeviceManager(self.api, TuyaOpenMQ(self.api))
         self._known_devices = {}
 
+        # cache results on a per instance basis
+        self.get_device_statuses = cache_response(seconds=60)(self.get_device_statuses)
+
     def get_device(self, device_id):
         resp = self.manager.get_device_functions(device_id)
         assert_response_success('get device', resp)
@@ -22,23 +25,25 @@ class Gosund(object):
         return GosundDevice.from_response(resp, device_id, self)
 
     def get_device_status(self, device_id):
-        return self.get_device_statuses().get(device_id, [])
+        status = self.get_device_statuses().get(device_id)
+        if status is None:
+            raise GosundException(
+                f'unable to find status for device with id "{device_id}"')
+        return status
 
-    @cache_response(seconds=60)
-    def get_device_statuses(self, devices=None):
-        devices = devices or self._known_devices
-        resp = self.manager.get_device_list_status(devices)
+    def get_device_statuses(self):
+        # limit 20 device_ids per api call
+        resp = self.manager.get_device_list_status(self._known_devices)
         assert_response_success('get device statuses', resp)
         return {device['id']: device['status'] for device in resp.get('result', [])}
 
     def _add_known_device(self, device_id):
-        self._clear_statuses_cache()
         self._known_devices[device_id] = True
+        self._clear_statuses_cache()
 
     def _remove_known_device(self, device_id):
+        del self._known_devices[device_id]
         self._clear_statuses_cache()
-        if device_id in self._known_devices:
-            del self._known_devices[device_id]
 
     def _clear_statuses_cache(self):
         self.get_device_statuses.clear_cache()
