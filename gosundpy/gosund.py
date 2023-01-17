@@ -15,8 +15,11 @@ class Gosund(object):
         self.manager = TuyaDeviceManager(self.api, TuyaOpenMQ(self.api))
         self._known_devices = {}
 
+    def __new__(cls, *args, **kwargs):
+        self = super().__new__(cls)
         # cache results on a per instance basis
         self.get_device_statuses = cache_response(seconds=60)(self.get_device_statuses)
+        return self
 
     def get_device(self, device_id):
         resp = self.manager.get_device_functions(device_id)
