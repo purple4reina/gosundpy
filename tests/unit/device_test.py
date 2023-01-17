@@ -26,6 +26,27 @@ def test_gosund_device_from_response(category, exp_cls):
     assert device.gosund == gosund
 
 @responses.activate
+def test_gosund_device_status_success(gosund_device):
+    status = 'status'
+    resp_json = {
+            'success': True,
+            'result': [{'id': gosund_device.device_id, 'status': status}],
+    }
+    patch_status(gosund_device.device_id, resp_json=resp_json)
+    assert gosund_device.get_status() == status
+
+@responses.activate
+def test_gosund_device_status_failure(gosund_device):
+    msg = 'oops'
+    patch_status(gosund_device.device_id, resp_json={'success': False, 'msg': msg})
+    try:
+        gosund_device.get_status()
+    except GosundException as e:
+        assert e.args == (f'unable to get device statuses: {msg}',)
+    else:
+        raise AssertionError('should have raised a GosundException')
+
+@responses.activate
 def test_gosund_device_send_commands_success(gosund_device):
     commands = [
             {'code': 'code1', 'value': 'value1'},

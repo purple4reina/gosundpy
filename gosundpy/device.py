@@ -29,8 +29,11 @@ class GosundDevice(object):
         self.device_id = device_id
         self.gosund = gosund
 
+    def get_status(self):
+        return self.gosund.get_device_status(self.device_id)
+
     def get_status_value(self, code):
-        for status in self.gosund.get_device_status(self.device_id):
+        for status in self.get_status():
             if status.get('code') == code:
                 return status.get('value')
         raise GosundException(
