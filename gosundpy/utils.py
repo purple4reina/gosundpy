@@ -16,15 +16,29 @@ class _timed_cache(object):
 
 def cache_response(hours=0, minutes=0, seconds=0):
     seconds += 60 * 60 * hours + 60 * minutes
-    cache = _timed_cache()
-    def _rate_limit(fn):
-        @functools.wraps(fn)
-        def _call(*args, **kwargs):
+
+    class _cache_response(object):
+
+        def __init__(self, fn):
+            # wraps class instance methods only
+            self.fn = fn
+            self.cache_key = f'_{fn.__name__}_cache'
+
+        def call(self, instance, *args, **kwargs):
             now = time.time()
+            cache = getattr(instance, self.cache_key)
             if now - cache.last_call < seconds:
                 return cache.value
-            cache.set(now, fn(*args, **kwargs))
+            cache.set(now, self.fn(instance, *args, **kwargs))
             return cache.value
-        _call.clear_cache = cache.reset
-        return _call
-    return _rate_limit
+
+        def __get__(self, instance, owner):
+            @functools.wraps(self.fn)
+            def _call(*args, **kwargs):
+                return self.call(instance, *args, **kwargs)
+            if not hasattr(instance, self.cache_key):
+                setattr(instance, self.cache_key, _timed_cache())
+            _call.clear_cache = getattr(instance, self.cache_key).reset
+            return _call
+
+    return _cache_response

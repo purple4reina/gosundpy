@@ -15,10 +15,12 @@ _test_cache_value = (
 def test_cache_response(kwargs, monkeypatch):
     call_count = [0]
 
-    @cache_response(**kwargs)
-    def test_fn():
-        call_count[0] += 1
-        return call_count[0]
+    class klass(object):
+        @cache_response(**kwargs)
+        def test_fn(self):
+            call_count[0] += 1
+            return call_count[0]
+    test_fn = klass().test_fn
 
     for _ in range(3):
         actual = test_fn()
