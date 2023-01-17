@@ -8,6 +8,14 @@ from gosundpy.exceptions import GosundException
 
 BASEURL = 'https://openapi.tuyaus.com/v1.0/iot-03'
 
+def _patch_device_statuses(device_id, resp_json):
+    responses.add(
+            responses.GET,
+            f'{BASEURL}/devices/status?device_ids={device_id}',
+            json=resp_json,
+            status=200,
+    )
+
 _test_gosund_device_from_response = (
         ('cz', 'GosundSwitchDevice'),
         ('dj', 'GosundLightBulbDevice'),
@@ -19,37 +27,29 @@ _test_gosund_device_from_response = (
 def test_gosund_device_from_response(category, exp_cls):
     resp = {'result': {'category': category}}
     device_id = 'testing id'
-    manager = 'testing manager'
+    gosund = 'testing gosund'
 
-    device = GosundDevice.from_response(resp, device_id, manager)
+    device = GosundDevice.from_response(resp, device_id, gosund)
     assert device.__class__.__name__ == exp_cls
     assert device.device_id == device_id
-    assert device.manager == manager
+    assert device.gosund == gosund
 
 @responses.activate
-def test_gosund_device_status_success(gosund_device):
-    status = 'status'
-    responses.add(
-            responses.GET,
-            f'{BASEURL}/devices/{gosund_device.device_id}/status',
-            json={'success': True, 'result': status},
-            status=200,
-    )
-    assert gosund_device.get_status() == status
+def test_gosund_device_status_success(gosund, gosund_device):
+    status = [{'code': 'abc', 'value': 123}, {'code': '123', 'value': 'abc'}]
+    resp_json = {'success': True, 'result': [{'id': gosund_device.device_id, 'status': status}]}
+    _patch_device_statuses(gosund_device.device_id, resp_json)
+    assert gosund.get_device_status(gosund_device.device_id) == status
 
 @responses.activate
-def test_gosund_device_status_failure(gosund_device):
+def test_gosund_device_status_failure(gosund, gosund_device):
     msg = 'oops'
-    responses.add(
-            responses.GET,
-            f'{BASEURL}/devices/{gosund_device.device_id}/status',
-            json={'success': False, 'msg': msg},
-            status=200,
-    )
+    resp_json = {'success': False, 'msg': msg}
+    _patch_device_statuses(gosund_device.device_id, resp_json)
     try:
-        gosund_device.get_status()
+        gosund.get_device_status(gosund_device.device_id)
     except GosundException as e:
-        assert e.args == (f'unable to get device status: {msg}',)
+        assert e.args == (f'unable to get device statuses: {msg}',)
     else:
         raise AssertionError('should have raised a GosundException')
 
@@ -89,27 +89,28 @@ def test_gosund_device_send_commands_failure(gosund_device):
     else:
         raise AssertionError('should have raised a GosundException')
 
-def _test_sensor_response(key, value, success):
+def _test_sensor_response(device_id, key, value, success):
     return {
-            'result': [
-                {'code': 'battery_state', 'value': 'high'},
-                {'code': 'battery_percentage', 'value': 100},
-                {'code': 'temp_unit_convert', 'value': 'f'},
-                {'code': 'maxtemp_set', 'value': 390},
-                {'code': 'minitemp_set', 'value': 0},
-                {'code': 'maxhum_set', 'value': 60},
-                {'code': 'minihum_set', 'value': 20},
-                {'code': 'temp_alarm', 'value': 'cancel'},
-                {'code': 'hum_alarm', 'value': 'cancel'},
-                {'code': 'temp_periodic_report', 'value': 60},
-                {'code': 'hum_periodic_report', 'value': 120},
-                {'code': 'temp_sensitivity', 'value': 6},
-                {'code': 'hum_sensitivity', 'value': 6},
-                {'code': key, 'value': value},
-            ],
+            'result': [{
+                'id': device_id,
+                'status': [
+                    {'code': 'battery_state', 'value': 'high'},
+                    {'code': 'battery_percentage', 'value': 100},
+                    {'code': 'temp_unit_convert', 'value': 'f'},
+                    {'code': 'maxtemp_set', 'value': 390},
+                    {'code': 'minitemp_set', 'value': 0},
+                    {'code': 'maxhum_set', 'value': 60},
+                    {'code': 'minihum_set', 'value': 20},
+                    {'code': 'temp_alarm', 'value': 'cancel'},
+                    {'code': 'hum_alarm', 'value': 'cancel'},
+                    {'code': 'temp_periodic_report', 'value': 60},
+                    {'code': 'hum_periodic_report', 'value': 120},
+                    {'code': 'temp_sensitivity', 'value': 6},
+                    {'code': 'hum_sensitivity', 'value': 6},
+                    {'code': key, 'value': value},
+                ],
+            }],
             'success': success,
-            't': 1671166487274,
-            'tid': 'c3d3f4ac7cfd11ed8864c6843b9bc2ab',
     }
 
 _test_gosund_tempurature_humidity_sensor_device_get_temperature = (
@@ -123,11 +124,9 @@ _test_gosund_tempurature_humidity_sensor_device_get_temperature = (
         _test_gosund_tempurature_humidity_sensor_device_get_temperature)
 def test_gosund_tempurature_humidity_sensor_device_get_temperature(
         unit, expect, success, gosund_temp_sensor):
-    responses.add(
-            responses.GET,
-            f'{BASEURL}/devices/{gosund_temp_sensor.device_id}/status',
-            json=_test_sensor_response('va_temperature', 135, success),
-            status=200,
+    _patch_device_statuses(
+            gosund_temp_sensor.device_id,
+            _test_sensor_response(gosund_temp_sensor.device_id, 'va_temperature', 135, success),
     )
     try:
         value = gosund_temp_sensor.get_temperature(unit=unit)
@@ -146,11 +145,9 @@ _test_gosund_tempurature_humidity_sensor_device_get_humidity = (
         _test_gosund_tempurature_humidity_sensor_device_get_humidity)
 def test_gosund_tempurature_humidity_sensor_device_get_humidity(
         expect, success, gosund_temp_sensor):
-    responses.add(
-            responses.GET,
-            f'{BASEURL}/devices/{gosund_temp_sensor.device_id}/status',
-            json=_test_sensor_response('va_humidity', 43, success),
-            status=200,
+    _patch_device_statuses(
+            gosund_temp_sensor.device_id,
+            _test_sensor_response(gosund_temp_sensor.device_id, 'va_humidity', 43, success),
     )
     try:
         value = gosund_temp_sensor.get_humidity()
@@ -169,11 +166,9 @@ _test_gosund_light_sensor_device_get_lux = (
         _test_gosund_light_sensor_device_get_lux)
 def test_gosund_light_sensor_device_get_lux(expect, success,
         gosund_light_sensor_device):
-    responses.add(
-            responses.GET,
-            f'{BASEURL}/devices/{gosund_light_sensor_device.device_id}/status',
-            json=_test_sensor_response('bright_value', 43, success),
-            status=200,
+    _patch_device_statuses(
+            gosund_light_sensor_device.device_id,
+            _test_sensor_response(gosund_light_sensor_device.device_id, 'bright_value', 43, success),
     )
     try:
         value = gosund_light_sensor_device.get_lux()
@@ -193,11 +188,9 @@ _test_gosund_motion_sensor_device_motion_sensed = (
         _test_gosund_motion_sensor_device_motion_sensed)
 def test_gosund_motion_sensor_device_motion_sensed(value, expect, success,
         gosund_motion_sensor_device):
-    responses.add(
-            responses.GET,
-            f'{BASEURL}/devices/{gosund_motion_sensor_device.device_id}/status',
-            json=_test_sensor_response('pir', value, success),
-            status=200,
+    _patch_device_statuses(
+            gosund_motion_sensor_device.device_id,
+            _test_sensor_response(gosund_motion_sensor_device.device_id, 'pir', value, success),
     )
     try:
         value = gosund_motion_sensor_device.motion_sensed()
@@ -217,11 +210,9 @@ _test_gosund_contact_sensor_is_open = (
         _test_gosund_contact_sensor_is_open)
 def test_gosund_contact_sensor_is_open(value, expect, success,
         gosund_contact_sensor_device):
-    responses.add(
-            responses.GET,
-            f'{BASEURL}/devices/{gosund_contact_sensor_device.device_id}/status',
-            json=_test_sensor_response('doorcontact_state', value, success),
-            status=200,
+    _patch_device_statuses(
+            gosund_contact_sensor_device.device_id,
+            _test_sensor_response(gosund_contact_sensor_device.device_id, 'doorcontact_state', value, success),
     )
     try:
         value = gosund_contact_sensor_device.is_open()

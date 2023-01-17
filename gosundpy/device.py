@@ -1,13 +1,13 @@
 import logging
 
-from .exceptions import assert_response_success, GosundException
+from .exceptions import GosundException
 
 logger = logging.getLogger('gosundpy')
 
 class GosundDevice(object):
 
     @staticmethod
-    def from_response(resp, device_id, manager):
+    def from_response(resp, device_id, gosund):
         category = resp['result']['category']
         if category == 'cz':
             cls = GosundSwitchDevice
@@ -23,29 +23,21 @@ class GosundDevice(object):
             cls = GosundContactSensorDevice
         else:
             cls = GosundDevice
-        return cls(device_id, manager)
+        return cls(device_id, gosund)
 
-    def __init__(self, device_id, manager):
+    def __init__(self, device_id, gosund):
         self.device_id = device_id
-        self.manager = manager
-
-    def get_status(self):
-        resp = self.manager.get_device_status(self.device_id)
-        assert_response_success('get device status', resp)
-        return resp.get('result', [])
+        self.gosund = gosund
 
     def get_status_value(self, code):
-        for status in self.get_status():
+        for status in self.gosund.get_device_status(self.device_id):
             if status.get('code') == code:
                 return status.get('value')
         raise GosundException(
                 f'code "{code}" not found for device id "{self.device_id}"')
 
     def send_commands(self, commands):
-        resp = self.manager.send_commands(self.device_id, commands)
-        codes = [f'{cmd["code"]}:{cmd["value"]}' for cmd in commands]
-        assert_response_success(f'send {codes} command to device', resp)
-        return resp
+        return self.gosund.send_commands(self.device_id, commands)
 
     def __str__(self):
         return f'<{self.__class__.__name__} device_id={self.device_id}>'
