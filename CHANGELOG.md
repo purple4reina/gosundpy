@@ -1,6 +1,11 @@
 # CHANGELOG
 
-## Unreleased
+## 0.6.0
+### Features
++ Reduce the number of Tuya API calls by getting status of all devices at once.
++ Calling `get_status` on a device now attempts to cache the status for 60
+  seconds.  This cache is cleared any time a new device is looked up or
+  `send_commands` is called.
 
 ## 0.5.1
 ### Bug Fixes
