@@ -14,8 +14,12 @@ def gosund():
 def gosund2():
     return _gosund()
 
+@pytest.fixture
+def gosund_non_caching():
+    return _gosund(caching_secs=None)
+
 @responses.activate
-def _gosund():
+def _gosund(caching_secs=60):
     users_login_uri = f'{BASEURL}/users/login'
     responses.add(
             responses.POST,
@@ -23,7 +27,8 @@ def _gosund():
             json={'success': True},
             status=200,
     )
-    return Gosund('username', 'password', 'access_id', 'access_key')
+    return Gosund('username', 'password', 'access_id', 'access_key',
+            status_cache_seconds=caching_secs)
 
 def patch_get_device(device_id, category):
     responses.add(

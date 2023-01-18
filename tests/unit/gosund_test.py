@@ -174,3 +174,13 @@ def test_gosund_get_device_statuses_cache_per_instance(gosund, gosund2):
     resp2 = gosund2.get_device_statuses()
     assert resp2 == {}
     assert id(resp1) != id(resp2)
+
+@responses.activate
+def test_gosund_get_device_statuses_non_caching(gosund_non_caching):
+    _patch_testing_requests()
+
+    gosund_non_caching.get_device(_test_device_id_1)
+    resp1 = gosund_non_caching.get_device_statuses()
+    resp2 = gosund_non_caching.get_device_statuses()
+    assert resp1 == {_test_device_id_1: _test_status_1}
+    assert id(resp1) != id(resp2)
