@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 0.6.2
 ### Bug Fixes
 + Make caching of `Gosund.get_device_statuses` optional via opt in and
   configurable
