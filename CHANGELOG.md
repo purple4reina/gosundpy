@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## Unreleased
+### Features
++ Add optional timeout to all Tuya API calls
 
 ## 0.6.2
 ### Bug Fixes

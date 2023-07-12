@@ -2,14 +2,18 @@ from tuya_iot import TuyaOpenAPI, AuthType, TuyaDeviceManager, TuyaOpenMQ
 
 from .device import GosundDevice
 from .exceptions import assert_response_success, GosundException
-from .utils import cache_response
+from .utils import cache_response, wrap_session_timeout
 
 class Gosund(object):
 
     def __init__(self, username, password, access_id, access_key, country=1,
-            endpoint='https://openapi.tuyaus.com', status_cache_seconds=None):
+            endpoint='https://openapi.tuyaus.com', status_cache_seconds=None,
+            timeout=None):
         self.api = TuyaOpenAPI(endpoint, access_id, access_key,
                 auth_type=AuthType.CUSTOM)
+        if timeout is not None:
+            wrap_session_timeout(self.api.session, timeout)
+
         resp = self.api.connect(username, password, country)
         assert_response_success('connect to api', resp)
         self.manager = TuyaDeviceManager(self.api, TuyaOpenMQ(self.api))

@@ -1,5 +1,6 @@
 import json
 import pytest
+import requests
 import responses
 
 from gosundpy.gosund import Gosund
@@ -18,8 +19,20 @@ def gosund2():
 def gosund_non_caching():
     return _gosund(caching_secs=None)
 
+@pytest.fixture
+def gosund_timeout(monkeypatch):
+    timeouts = []
+    _orig_request = requests.Session.request
+    def _request(*args, timeout=None, **kwargs):
+        timeouts.append(timeout)
+        return _orig_request(*args, timeout=timeout, **kwargs)
+    monkeypatch.setattr('requests.Session.request', _request)
+    gosund = _gosund(timeout=10)
+    gosund.timeouts = timeouts
+    return gosund
+
 @responses.activate
-def _gosund(caching_secs=60):
+def _gosund(caching_secs=60, timeout=None):
     users_login_uri = f'{BASEURL}/users/login'
     responses.add(
             responses.POST,
@@ -28,7 +41,7 @@ def _gosund(caching_secs=60):
             status=200,
     )
     return Gosund('username', 'password', 'access_id', 'access_key',
-            status_cache_seconds=caching_secs)
+            status_cache_seconds=caching_secs, timeout=timeout)
 
 def patch_get_device(device_id, category):
     responses.add(

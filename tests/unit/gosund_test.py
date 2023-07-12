@@ -184,3 +184,13 @@ def test_gosund_get_device_statuses_non_caching(gosund_non_caching):
     resp2 = gosund_non_caching.get_device_statuses()
     assert resp1 == {_test_device_id_1: _test_status_1}
     assert id(resp1) != id(resp2)
+
+@responses.activate
+def test_gosund_timeouts(gosund_timeout):
+    _patch_testing_requests()
+
+    assert gosund_timeout.timeouts.pop() == 10
+    device = gosund_timeout.get_device(_test_device_id_1)
+    assert gosund_timeout.timeouts.pop() == 10
+    device.get_status()
+    assert gosund_timeout.timeouts.pop() == 10

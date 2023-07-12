@@ -28,3 +28,11 @@ def cache_response(hours=0, minutes=0, seconds=0):
         _call.clear_cache = cache.reset
         return _call
     return _rate_limit
+
+def wrap_session_timeout(session, _timeout):
+    def _wrap(fn):
+        @functools.wraps(fn)
+        def _request(*args, timeout=None, **kwargs):
+            return fn(*args, timeout=_timeout, **kwargs)
+        return _request
+    session.request = _wrap(session.request)
