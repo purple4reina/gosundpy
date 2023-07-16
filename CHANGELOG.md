@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## 0.8.0
 ### Features
 + Throw `GosundDeviceOfflineException` when sending a command fails because it
