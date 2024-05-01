@@ -69,6 +69,8 @@ def _patch_testing_requests():
     patch_get_device(_test_device_id_1, 'ab')
     patch_get_device(_test_device_id_2, 'ab')
     patch_get_device(_test_device_id_3, 'ab')
+    for i in range(4, 26):
+        patch_get_device(f'device-id-{i}', 'ab')
 
     def _patch_status_for(device_ids, results):
         patch_status(*device_ids, resp_json={'success': True, 'result': results})
@@ -79,6 +81,20 @@ def _patch_testing_requests():
             [_test_result_1, _test_result_2])
     _patch_status_for([_test_device_id_1, _test_device_id_2, _test_device_id_3],
             [_test_result_1, _test_result_2, _test_result_3])
+    _patch_status_for(
+            [f'device-id-{i}' for i in range(1, 21)],
+            [
+                {'id': f'device-id-{i}', 'status': [{'code': 'abc', 'value': f'device-id-{i}'}]}
+                for i in range(1, 21)
+            ],
+    )
+    _patch_status_for(
+            [f'device-id-{i}' for i in range(21, 26)],
+            [
+                {'id': f'device-id-{i}', 'status': [{'code': 'abc', 'value': f'device-id-{i}'}]}
+                for i in range(21, 26)
+            ],
+    )
 
     responses.add(
             responses.POST,
@@ -113,6 +129,24 @@ def test_gosund_get_device_statuses_device_ids(gosund):
             _test_device_id_1: _test_status_1,
             _test_device_id_2: _test_status_2,
             _test_device_id_3: _test_status_3,
+    }
+
+    # 20th device added
+    for i in range(4, 21):
+        gosund.get_device(f'device-id-{i}')
+    assert len(gosund._known_devices) == 20
+    assert gosund.get_device_statuses() == {
+            f'device-id-{i}': [{'code': 'abc', 'value': f'device-id-{i}'}]
+            for i in range(1, 21)
+    }
+
+    # 25th device added
+    for i in range(21, 26):
+        gosund.get_device(f'device-id-{i}')
+    assert len(gosund._known_devices) == 25
+    assert gosund.get_device_statuses() == {
+            f'device-id-{i}': [{'code': 'abc', 'value': f'device-id-{i}'}]
+            for i in range(1, 26)
     }
 
 @responses.activate

@@ -40,9 +40,13 @@ class Gosund(object):
 
     def get_device_statuses(self):
         # limit 20 device_ids per api call
-        resp = self.manager.get_device_list_status(self._known_devices)
-        assert_response_success('get device statuses', resp)
-        return {device['id']: device['status'] for device in resp.get('result', [])}
+        results = []
+        known_devices = list(self._known_devices.keys())
+        for i in range(0, len(self._known_devices), 20):
+            resp = self.manager.get_device_list_status(known_devices[i:i+20])
+            assert_response_success('get device statuses', resp)
+            results.extend(resp.get('result') or [])
+        return {device['id']: device['status'] for device in results}
 
     def _add_known_device(self, device_id):
         self._known_devices[device_id] = True
