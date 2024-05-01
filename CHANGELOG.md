@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 0.9.0
 ### Features
 + Support for querying more than 20 devices at once.
 
